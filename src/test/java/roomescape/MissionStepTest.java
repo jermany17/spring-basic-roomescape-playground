@@ -84,14 +84,43 @@ public class MissionStepTest {
         assertThat(adminResponse.as(ReservationResponse.class).getName()).isEqualTo("브라운");
     }
 
+    @Test
+    void 삼단계() {
+        String brownToken = createToken("brown@email.com", "password");
+
+        RestAssured.given().log().all()
+                .cookie("token", brownToken)
+                .get("/admin")
+                .then().log().all()
+                .statusCode(401);
+
+        String adminToken = createToken("admin@email.com", "password");
+
+        RestAssured.given().log().all()
+                .cookie("token", adminToken)
+                .get("/admin")
+                .then().log().all()
+                .statusCode(200);
+    }
+
     // JWT 토큰 생성 메서드
     private String createToken(String email, String password) {
-        // JWT 토큰 생성
-        return Jwts.builder()
-                .setSubject("1") // 사용자 ID (예: admin의 ID가 1)
-                .claim("name", "어드민") // 사용자 이름
-                .claim("role", "ADMIN") // 사용자 역할
-                .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes())) // 서명
-                .compact();
+        if (email.equals("admin@email.com")) {
+            return Jwts.builder()
+                    .setSubject("1")
+                    .claim("name", "admin")
+                    .claim("role", "ADMIN") // 관리자 권한
+                    .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                    .compact();
+        } else if (email.equals("brown@email.com")) {
+            return Jwts.builder()
+                    .setSubject("2")
+                    .claim("name", "brown")
+                    .claim("role", "USER") // 일반 사용자 권한
+                    .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                    .compact();
+        }
+        return null; // 예상하지 못한 이메일인 경우 null 반환
     }
+
 }
